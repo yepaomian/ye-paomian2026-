@@ -3,6 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const ejsMate = require('ejs-mate');
+const pgSession = require('connect-pg-simple')(session);
 const config = require('./config');
 const { setPlan } = require('./services/profile');
 
@@ -16,7 +17,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(express.urlencoded({ extended: true }));
 
-// Stripe webhook must receive the raw body BEFORE the JSON parser runs.
+// Stripe webhook
 app.post(
   '/billing/webhook',
   express.raw({ type: 'application/json' }),
@@ -54,16 +55,25 @@ app.post(
 );
 
 app.use(express.json());
+
+// ============ Session 配置（存到 Supabase 数据库） ============
+// 如果你的 Supabase 密码不是 jmtqepzzaadzdqhkuvea，把下面这行里的密码改成你的真实密码
+const DATABASE_URL = 'postgresql://postgres.jmtqepzzaadzdqhkuvea:jmtqepzzaadzdqhkuvea@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres';
+
 app.use(
   session({
-    secret: config.sessionSecret,
+    store: new pgSession({
+      conString: DATABASE_URL,
+      tableName: 'session'
+    }),
+    secret: config.sessionSecret || 'abc123xyz',
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
-      secure: config.isProduction,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      secure: config.isProduction || false,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   })
 );
