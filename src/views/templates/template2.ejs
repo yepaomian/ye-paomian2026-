@@ -1,0 +1,84 @@
+<style>
+  .tpl2 { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; color: #1f2937; background: #fff; }
+  .tpl2 .t2-head { background: #4f46e5; color: #fff; border-radius: 12px; padding: 28px 30px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .tpl2 .t2-title { font-size: 34px; font-weight: 700; margin: 0; }
+  .tpl2 .t2-sub { opacity: .85; font-size: 14px; }
+  .tpl2 .t2-num { text-align: right; font-size: 14px; }
+  .tpl2 .t2-num strong { font-size: 18px; }
+  .tpl2 .t2-grid { display: flex; gap: 24px; margin-bottom: 24px; }
+  .tpl2 .t2-col { flex: 1; font-size: 14px; }
+  .tpl2 .t2-label { text-transform: uppercase; font-size: 11px; letter-spacing: 1px; color: #6b7280; margin-bottom: 6px; font-weight: 600; }
+  .tpl2 .t2-name { font-weight: 700; font-size: 16px; }
+  .tpl2 table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; }
+  .tpl2 th { background: #eef2ff; color: #4338ca; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; padding: 12px 14px; text-align: left; }
+  .tpl2 th:first-child { border-radius: 8px 0 0 8px; }
+  .tpl2 th:last-child { border-radius: 0 8px 8px 0; text-align: right; }
+  .tpl2 td { padding: 12px 14px; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+  .tpl2 .t2-num { text-align: right; }
+  .tpl2 .t2-footer { display: flex; justify-content: space-between; align-items: flex-start; }
+  .tpl2 .t2-totals { width: 300px; background: #f9fafb; border-radius: 12px; padding: 18px 20px; font-size: 14px; }
+  .tpl2 .t2-totals .row { display: flex; justify-content: space-between; padding: 5px 0; }
+  .tpl2 .t2-totals .grand { border-top: 1px solid #e5e7eb; margin-top: 8px; padding-top: 10px; font-weight: 700; font-size: 18px; color: #4f46e5; }
+  .tpl2 .t2-notes { font-size: 13px; color: #6b7280; max-width: 45%; }
+</style>
+<div class="tpl2">
+  <div class="t2-head">
+    <div>
+      <h1 class="t2-title">Invoice</h1>
+      <% if (invoice.from.name) { %><div class="t2-sub"><%= invoice.from.name %></div><% } %>
+    </div>
+    <div class="t2-num">
+      <strong><%= invoice.invoice_number %></strong><br />
+      Issued <%= invoice.issueDateFmt %><br />
+      <% if (invoice.due_date) { %>Due <%= invoice.dueDateFmt %><% } %>
+    </div>
+  </div>
+
+  <div class="t2-grid">
+    <div class="t2-col">
+      <div class="t2-label">From</div>
+      <% if (invoice.from.name) { %><div class="t2-name"><%= invoice.from.name %></div><% } %>
+      <% if (invoice.from.email) { %><div><%= invoice.from.email %></div><% } %>
+      <% if (invoice.from.phone) { %><div><%= invoice.from.phone %></div><% } %>
+      <% if (invoice.from.address) { %><div><%= invoice.from.address %></div><% } %>
+      <% if (invoice.from.city || invoice.from.country) { %><div><%= [invoice.from.city, invoice.from.country].filter(Boolean).join(', ') %></div><% } %>
+      <% if (invoice.from.taxId) { %><div>Tax ID: <%= invoice.from.taxId %></div><% } %>
+    </div>
+    <div class="t2-col">
+      <div class="t2-label">Bill To</div>
+      <% if (invoice.to.name) { %><div class="t2-name"><%= invoice.to.name %></div><% } %>
+      <% if (invoice.to.company) { %><div><%= invoice.to.company %></div><% } %>
+      <% if (invoice.to.address) { %><div><%= invoice.to.address %></div><% } %>
+      <% if (invoice.to.city || invoice.to.country) { %><div><%= [invoice.to.city, invoice.to.country].filter(Boolean).join(', ') %></div><% } %>
+      <% if (invoice.to.email) { %><div><%= invoice.to.email %></div><% } %>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Description</th><th>Qty</th><th>Rate</th><th class="t2-num">Amount</th></tr>
+    </thead>
+    <tbody>
+      <% invoice.items.forEach(function (it) { %>
+        <tr>
+          <td><%= it.description %></td>
+          <td><%= it.quantity %></td>
+          <td><%= it.rateFmt %></td>
+          <td class="t2-num"><%= it.amountFmt %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <div class="t2-footer">
+    <div class="t2-notes">
+      <% if (invoice.notes) { %><strong>Notes</strong><br /><%= invoice.notes %><% } %>
+    </div>
+    <div class="t2-totals">
+      <div class="row"><span>Subtotal</span><span><%= invoice.subtotalFmt %></span></div>
+      <% if (invoice.discountAmount > 0) { %><div class="row"><span>Discount</span><span>-<%= invoice.discountAmountFmt %></span></div><% } %>
+      <% if (invoice.taxRate > 0) { %><div class="row"><span>Tax (<%= invoice.taxRate %>%)</span><span><%= invoice.taxAmountFmt %></span></div><% } %>
+      <div class="row grand"><span>Total</span><span><%= invoice.totalFmt %></span></div>
+    </div>
+  </div>
+</div>

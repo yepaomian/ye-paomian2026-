@@ -1,0 +1,81 @@
+<style>
+  .tpl4 { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; color: #0f172a; background: #fff; }
+  .tpl4 .t4-head { background: #0f172a; color: #fff; padding: 32px 34px; margin: 0 -34px; }
+  .tpl4 .t4-head-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .tpl4 .t4-title { font-size: 42px; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+  .tpl4 .t4-accent { color: #f59e0b; }
+  .tpl4 .t4-num { text-align: right; font-size: 14px; opacity: .9; }
+  .tpl4 .t4-body { padding: 28px 0 0; display: flex; gap: 30px; }
+  .tpl4 .t4-col { flex: 1; font-size: 14px; line-height: 1.65; }
+  .tpl4 .t4-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #f59e0b; margin-bottom: 8px; }
+  .tpl4 .t4-name { font-weight: 700; font-size: 16px; color: #0f172a; }
+  .tpl4 table { width: 100%; border-collapse: collapse; margin: 28px 0 20px; }
+  .tpl4 th { background: #0f172a; color: #fff; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; padding: 12px 14px; text-align: left; }
+  .tpl4 th.t4-num { text-align: right; }
+  .tpl4 td { padding: 13px 14px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+  .tpl4 td.t4-num { text-align: right; }
+  .tpl4 .t4-totals { width: 300px; margin-left: auto; font-size: 14px; }
+  .tpl4 .t4-totals .row { display: flex; justify-content: space-between; padding: 7px 0; }
+  .tpl4 .t4-totals .grand { background: #f59e0b; color: #0f172a; font-weight: 800; font-size: 18px; padding: 12px 16px; margin-top: 10px; }
+  .tpl4 .t4-notes { font-size: 13px; color: #475569; margin-top: 24px; }
+</style>
+<div class="tpl4">
+  <div class="t4-head">
+    <div class="t4-head-top">
+      <div>
+        <h1 class="t4-title">In<span class="t4-accent">voice</span></h1>
+        <% if (invoice.from.name) { %><div style="margin-top:6px;font-size:15px;"><%= invoice.from.name %></div><% } %>
+      </div>
+      <div class="t4-num">
+        <strong style="font-size:18px;"><%= invoice.invoice_number %></strong><br />
+        Issued <%= invoice.issueDateFmt %><br />
+        <% if (invoice.due_date) { %>Due <%= invoice.dueDateFmt %><% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="t4-body">
+    <div class="t4-col">
+      <div class="t4-label">From</div>
+      <% if (invoice.from.name) { %><div class="t4-name"><%= invoice.from.name %></div><% } %>
+      <% if (invoice.from.email) { %><div><%= invoice.from.email %></div><% } %>
+      <% if (invoice.from.phone) { %><div><%= invoice.from.phone %></div><% } %>
+      <% if (invoice.from.address) { %><div><%= invoice.from.address %></div><% } %>
+      <% if (invoice.from.city || invoice.from.country) { %><div><%= [invoice.from.city, invoice.from.country].filter(Boolean).join(', ') %></div><% } %>
+      <% if (invoice.from.taxId) { %><div>Tax ID: <%= invoice.from.taxId %></div><% } %>
+    </div>
+    <div class="t4-col">
+      <div class="t4-label">Bill To</div>
+      <% if (invoice.to.name) { %><div class="t4-name"><%= invoice.to.name %></div><% } %>
+      <% if (invoice.to.company) { %><div><%= invoice.to.company %></div><% } %>
+      <% if (invoice.to.address) { %><div><%= invoice.to.address %></div><% } %>
+      <% if (invoice.to.city || invoice.to.country) { %><div><%= [invoice.to.city, invoice.to.country].filter(Boolean).join(', ') %></div><% } %>
+      <% if (invoice.to.email) { %><div><%= invoice.to.email %></div><% } %>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Description</th><th>Qty</th><th class="t4-num">Rate</th><th class="t4-num">Amount</th></tr>
+    </thead>
+    <tbody>
+      <% invoice.items.forEach(function (it) { %>
+        <tr>
+          <td><%= it.description %></td>
+          <td><%= it.quantity %></td>
+          <td class="t4-num"><%= it.rateFmt %></td>
+          <td class="t4-num"><%= it.amountFmt %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <div class="t4-totals">
+    <div class="row"><span>Subtotal</span><span><%= invoice.subtotalFmt %></span></div>
+    <% if (invoice.discountAmount > 0) { %><div class="row"><span>Discount</span><span>-<%= invoice.discountAmountFmt %></span></div><% } %>
+    <% if (invoice.taxRate > 0) { %><div class="row"><span>Tax (<%= invoice.taxRate %>%)</span><span><%= invoice.taxAmountFmt %></span></div><% } %>
+    <div class="row grand"><span>Total</span><span><%= invoice.totalFmt %></span></div>
+  </div>
+
+  <% if (invoice.notes) { %><div class="t4-notes"><strong>Notes:</strong> <%= invoice.notes %></div><% } %>
+</div>

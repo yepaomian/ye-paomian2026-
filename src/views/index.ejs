@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InvoiceTool — Invoices for freelancers</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',-apple-system,sans-serif; background:#0b0d15; color:#e8edf5; line-height:1.6; }
+        .container { max-width:1120px; margin:0 auto; padding:0 24px; }
+        header { padding:20px 0; border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(11,13,21,0.85); backdrop-filter:blur(8px); }
+        .nav { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+        .brand { font-size:24px; font-weight:800; color:#fff; text-decoration:none; }
+        .brand span { background:linear-gradient(135deg,#6c5ce7,#a29bfe); padding:2px 10px; border-radius:6px; }
+        .nav-links { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+        .nav-links a { color:#b0b8c8; text-decoration:none; font-size:15px; font-weight:500; }
+        .nav-links a:hover { color:#fff; }
+        .btn-primary { background:linear-gradient(135deg,#6c5ce7,#a29bfe); color:#fff; border:none; padding:10px 28px; border-radius:40px; font-weight:600; cursor:pointer; transition:0.2s; text-decoration:none; display:inline-block; }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(108,92,231,0.35); }
+        .hero { text-align:center; padding:60px 0 30px; }
+        .hero h1 { font-size:48px; font-weight:800; line-height:1.2; background:linear-gradient(135deg,#fff,#a29bfe); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .hero .sub { color:#8892a8; font-size:18px; margin-top:12px; }
+        .hero .stats { display:flex; justify-content:center; gap:60px; margin-top:40px; flex-wrap:wrap; }
+        .hero .stats .num { font-size:42px; font-weight:800; background:linear-gradient(135deg,#6c5ce7,#fd79a8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .hero .stats .label { color:#8892a8; font-size:14px; margin-top:4px; }
+        .features { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:30px; margin:50px 0; }
+        .feature { background:#141824; border-radius:20px; padding:28px; text-align:center; border:1px solid rgba(255,255,255,0.06); }
+        .feature h3 { color:#fff; font-size:18px; }
+        .feature p { color:#8892a8; font-size:14px; margin-top:8px; }
+        .pricing-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:24px; margin:40px 0 60px; }
+        .pricing-card { background:#141824; border-radius:20px; padding:28px; text-align:center; border:1px solid rgba(255,255,255,0.06); transition:0.25s; }
+        .pricing-card:hover { transform:translateY(-4px); border-color:rgba(108,92,231,0.4); }
+        .pricing-card .name { font-size:18px; font-weight:700; color:#fff; }
+        .pricing-card .price { font-size:36px; font-weight:800; color:#fff; margin:12px 0 4px; }
+        .pricing-card .price span { font-size:16px; font-weight:400; color:#8892a8; }
+        .pricing-card ul { list-style:none; padding:0; margin:16px 0; }
+        .pricing-card ul li { padding:4px 0; color:#b0b8c8; font-size:14px; }
+        .site-footer { margin-top:60px; padding:30px 0; border-top:1px solid rgba(255,255,255,0.06); text-align:center; }
+        .disclaimer { font-size:13px; color:#6b7488; max-width:700px; margin:0 auto 12px; line-height:1.7; }
+        .disclaimer strong { color:#8892a8; }
+        .copyright { font-size:13px; color:#4a5266; }
+        @media (max-width:768px) { .hero h1 { font-size:30px; } .hero .stats { gap:30px; } .pricing-grid { grid-template-columns:1fr; } .nav-links { gap:12px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container nav">
+            <a class="brand" href="/">Invoice<span>Tool</span></a>
+            <div class="nav-links">
+                <a href="/login">Log in</a>
+                <a href="/register" class="btn-primary">Sign up free</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h1>Beautiful invoices,<br />in seconds</h1>
+            <p class="sub">Create professional invoices with 4 templates, export as PDF, and manage everything from one dashboard.</p>
+            <div class="stats">
+                <div><div class="num">1</div><div class="label">Free invoice / month</div></div>
+                <div><div class="num">4</div><div class="label">Templates</div></div>
+                <div><div class="num">PDF</div><div class="label">One‑click export</div></div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="feature"><h3>4 templates</h3><p>Classic, Modern, Minimal, and Bold — pick the look that fits your brand.</p></div>
+            <div class="feature"><h3>PDF export</h3><p>Download print-ready A4 PDFs of any invoice in one click.</p></div>
+            <div class="feature"><h3>Works everywhere</h3><p>Fully responsive — create and send invoices from phone or desktop.</p></div>
+        </section>
+
+        <section>
+            <h2 style="text-align:center;font-size:28px;font-weight:700;margin-bottom:10px;">Simple, honest pricing</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="name">Free</div>
+                    <div class="price">$0 <span>/ month</span></div>
+                    <ul><li>1 invoice per month</li><li>4 templates</li><li>PDF export</li></ul>
+                    <a href="/register" class="btn-primary">Get started</a>
+                </div>
+                <div class="pricing-card" style="border-color:rgba(108,92,231,0.5);">
+                    <div class="name">Premium</div>
+                    <div class="price">$9.99 <span>/ month</span></div>
+                    <ul><li>5 invoices per month</li><li>4 templates</li><li>PDF export</li><li>Priority support</li></ul>
+                    <a href="#" class="btn-primary">Choose Premium</a>
+                </div>
+                <div class="pricing-card">
+                    <div class="name">Lifetime</div>
+                    <div class="price">$29.99 <span>one‑time</span></div>
+                    <ul><li>Unlimited invoices</li><li>4 templates</li><li>PDF export</li><li>All future updates</li></ul>
+                    <a href="#" class="btn-primary">Go lifetime</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p class="disclaimer"><strong>Disclaimer:</strong> This tool generates invoice templates for informational purposes only. Not legal or tax advice. Please consult a qualified professional for tax and legal matters. We are not responsible for any errors, omissions, or financial losses. By using this tool, you agree that you are solely responsible for your invoices.</p>
+            <p class="copyright">&copy; 2026 InvoiceTool</p>
+        </div>
+    </footer>
+</body>
+</html>

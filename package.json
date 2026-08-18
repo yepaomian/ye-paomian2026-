@@ -1,0 +1,25 @@
+{
+  "name": "invoice-tool",
+  "version": "1.0.0",
+  "description": "Overseas invoice generator — templates, PDF export, tiered plans. Node.js + Express + Supabase.",
+  "type": "commonjs",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "ejs-mate": "^4.0.0",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "puppeteer": "^22.15.0",
+    "stripe": "^16.8.0"
+  }
+}

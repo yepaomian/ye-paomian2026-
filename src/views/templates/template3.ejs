@@ -1,0 +1,67 @@
+<style>
+  .tpl3 { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #111; background: #fff; }
+  .tpl3 .t3-top { margin-bottom: 40px; }
+  .tpl3 .t3-title { font-size: 22px; font-weight: 300; letter-spacing: 6px; text-transform: uppercase; margin: 0 0 4px; }
+  .tpl3 .t3-num { font-size: 13px; color: #999; }
+  .tpl3 .t3-meta { display: flex; justify-content: space-between; margin-bottom: 40px; font-size: 13px; line-height: 1.6; }
+  .tpl3 .t3-to { text-align: right; }
+  .tpl3 .t3-name { font-weight: 600; font-size: 14px; }
+  .tpl3 table { width: 100%; border-collapse: collapse; margin: 30px 0; }
+  .tpl3 th { font-weight: 400; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #999; padding: 0 0 10px; text-align: left; border-bottom: 1px solid #111; }
+  .tpl3 th.t3-num, .tpl3 td.t3-num { text-align: right; }
+  .tpl3 td { padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+  .tpl3 .t3-totals { width: 260px; margin-left: auto; font-size: 14px; }
+  .tpl3 .t3-totals .row { display: flex; justify-content: space-between; padding: 7px 0; }
+  .tpl3 .t3-totals .grand { border-top: 1px solid #111; font-weight: 600; font-size: 18px; margin-top: 8px; padding-top: 12px; }
+  .tpl3 .t3-notes { font-size: 12px; color: #888; margin-top: 36px; max-width: 70%; }
+</style>
+<div class="tpl3">
+  <div class="t3-top">
+    <h1 class="t3-title">Invoice</h1>
+    <div class="t3-num"><%= invoice.invoice_number %> &nbsp;·&nbsp; Issued <%= invoice.issueDateFmt %><% if (invoice.due_date) { %> &nbsp;·&nbsp; Due <%= invoice.dueDateFmt %><% } %></div>
+  </div>
+
+  <div class="t3-meta">
+    <div class="t3-from">
+      <% if (invoice.from.name) { %><div class="t3-name"><%= invoice.from.name %></div><% } %>
+      <% if (invoice.from.email) { %><div><%= invoice.from.email %></div><% } %>
+      <% if (invoice.from.phone) { %><div><%= invoice.from.phone %></div><% } %>
+      <% if (invoice.from.address) { %><div><%= invoice.from.address %></div><% } %>
+      <% if (invoice.from.city || invoice.from.country) { %><div><%= [invoice.from.city, invoice.from.country].filter(Boolean).join(', ') %></div><% } %>
+      <% if (invoice.from.taxId) { %><div>Tax ID: <%= invoice.from.taxId %></div><% } %>
+    </div>
+    <div class="t3-to">
+      <div class="t3-name">Billed to</div>
+      <% if (invoice.to.name) { %><div><%= invoice.to.name %></div><% } %>
+      <% if (invoice.to.company) { %><div><%= invoice.to.company %></div><% } %>
+      <% if (invoice.to.address) { %><div><%= invoice.to.address %></div><% } %>
+      <% if (invoice.to.city || invoice.to.country) { %><div><%= [invoice.to.city, invoice.to.country].filter(Boolean).join(', ') %></div><% } %>
+      <% if (invoice.to.email) { %><div><%= invoice.to.email %></div><% } %>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Description</th><th>Qty</th><th class="t3-num">Rate</th><th class="t3-num">Amount</th></tr>
+    </thead>
+    <tbody>
+      <% invoice.items.forEach(function (it) { %>
+        <tr>
+          <td><%= it.description %></td>
+          <td><%= it.quantity %></td>
+          <td class="t3-num"><%= it.rateFmt %></td>
+          <td class="t3-num"><%= it.amountFmt %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <div class="t3-totals">
+    <div class="row"><span>Subtotal</span><span><%= invoice.subtotalFmt %></span></div>
+    <% if (invoice.discountAmount > 0) { %><div class="row"><span>Discount</span><span>-<%= invoice.discountAmountFmt %></span></div><% } %>
+    <% if (invoice.taxRate > 0) { %><div class="row"><span>Tax (<%= invoice.taxRate %>%)</span><span><%= invoice.taxAmountFmt %></span></div><% } %>
+    <div class="row grand"><span>Total</span><span><%= invoice.totalFmt %></span></div>
+  </div>
+
+  <% if (invoice.notes) { %><div class="t3-notes"><%= invoice.notes %></div><% } %>
+</div>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Invoice — InvoiceTool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:#0b0d15; color:#e8edf5; min-height:100vh; }
+        .container { max-width:1120px; margin:0 auto; padding:0 24px; }
+        header { padding:20px 0; border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(11,13,21,0.85); backdrop-filter:blur(8px); }
+        .nav { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+        .brand { font-size:24px; font-weight:800; color:#fff; text-decoration:none; }
+        .brand span { background:linear-gradient(135deg,#6c5ce7,#a29bfe); padding:2px 10px; border-radius:6px; }
+        .nav-links { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+        .nav-links a { color:#b0b8c8; text-decoration:none; font-size:15px; font-weight:500; }
+        .nav-links a:hover { color:#fff; }
+        .btn-primary { background:linear-gradient(135deg,#6c5ce7,#a29bfe); color:#fff; border:none; padding:10px 28px; border-radius:40px; font-weight:600; cursor:pointer; transition:0.2s; text-decoration:none; display:inline-block; }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(108,92,231,0.35); }
+        .btn-secondary { background:transparent; color:#b0b8c8; border:1px solid rgba(255,255,255,0.12); padding:10px 28px; border-radius:40px; font-weight:500; cursor:pointer; transition:0.2s; text-decoration:none; display:inline-block; }
+        .btn-secondary:hover { background:rgba(255,255,255,0.06); color:#fff; }
+        .form-group { margin-bottom:20px; }
+        .form-group label { display:block; color:#b0b8c8; font-size:14px; font-weight:500; margin-bottom:4px; }
+        .form-group input, .form-group select, .form-group textarea { width:100%; padding:12px 16px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background:#0b0d15; color:#fff; font-size:15px; outline:none; transition:0.2s; }
+        .form-group input:focus, .form-group select:focus { border-color:#6c5ce7; }
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+        .card { background:#141824; border-radius:16px; padding:24px; border:1px solid rgba(255,255,255,0.06); margin-bottom:24px; }
+        .card h3 { color:#fff; font-size:18px; margin-bottom:16px; }
+        .inline-group { display:flex; gap:20px; flex-wrap:wrap; }
+        .inline-group .form-group { flex:1; min-width:150px; }
+        .site-footer { margin-top:60px; padding:30px 0; border-top:1px solid rgba(255,255,255,0.06); text-align:center; }
+        .disclaimer { font-size:13px; color:#6b7488; max-width:700px; margin:0 auto 12px; line-height:1.7; }
+        .copyright { font-size:13px; color:#4a5266; }
+        .flash { padding:12px 20px; border-radius:12px; margin:16px 0; background:#1a1a2e; border:1px solid rgba(255,255,255,0.06); color:#b0b8c8; }
+        @media (max-width:768px) { .nav-links { gap:12px; } .form-row { grid-template-columns:1fr; } .inline-group { flex-direction:column; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container nav">
+            <a class="brand" href="/dashboard">Invoice<span>Tool</span></a>
+            <nav class="nav-links">
+                <a href="/dashboard">Dashboard</a>
+                <a href="/invoices/new">New Invoice</a>
+                <a href="/billing">Billing</a>
+                <form method="post" action="/logout" style="display:inline;">
+                    <button type="submit" style="background:none;border:none;color:#b0b8c8;cursor:pointer;font-size:15px;font-weight:500;">Log out</button>
+                </form>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1 style="font-size:32px;font-weight:800;margin:24px 0 8px;">New Invoice</h1>
+
+        <form method="post" action="/invoices">
+            <div class="card">
+                <h3>Details</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Invoice Number</label>
+                        <input type="text" name="invoice_number" placeholder="Auto-generated if blank" />
+                    </div>
+                    <div class="form-group">
+                        <label>Issue Date</label>
+                        <input type="date" name="issue_date" value="<%= new Date().toISOString().split('T')[0] %>" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Due Date</label>
+                        <input type="date" name="due_date" />
+                    </div>
+                    <div class="form-group">
+                        <label>Currency</label>
+                        <select name="currency"><option value="USD">USD</option><option value="EUR">EUR</option></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status"><option value="draft">Draft</option><option value="sent">Sent</option><option value="paid">Paid</option></select>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>From (Your Business)</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>Company / Your Name</label><input type="text" name="from_name" /></div>
+                    <div class="form-group"><label>Email</label><input type="email" name="from_email" /></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Phone</label><input type="text" name="from_phone" /></div>
+                    <div class="form-group"><label>Tax / VAT ID</label><input type="text" name="from_tax_id" /></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Address</label><input type="text" name="from_address" /></div>
+                    <div class="form-group"><label>City</label><input type="text" name="from_city" /></div>
+                </div>
+                <div class="form-group"><label>Country</label><input type="text" name="from_country" /></div>
+            </div>
+
+            <div class="card">
+                <h3>Bill To</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>Client Name</label><input type="text" name="to_name" /></div>
+                    <div class="form-group"><label>Company</label><input type="text" name="to_company" /></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Email</label><input type="email" name="to_email" /></div>
+                    <div class="form-group"><label>City</label><input type="text" name="to_city" /></div>
+                </div>
+                <div class="form-group"><label>Country</label><input type="text" name="to_country" /></div>
+            </div>
+
+            <div class="card">
+                <h3>Line Items</h3>
+                <div id="items-container">
+                    <div class="form-row item-row">
+                        <div class="form-group"><label>Description</label><input type="text" name="items[0][description]" /></div>
+                        <div class="form-group"><label>Qty</label><input type="number" name="items[0][qty]" step="1" min="0" /></div>
+                        <div class="form-group"><label>Rate</label><input type="number" name="items[0][rate]" step="0.01" min="0" /></div>
+                    </div>
+                </div>
+                <button type="button" class="btn-secondary" onclick="addItem()">+ Add Item</button>
+            </div>
+
+            <div class="card">
+                <h3>Amount</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>Discount</label><input type="number" name="discount" step="0.01" min="0" /></div>
+                    <div class="form-group">
+                        <label>Discount Type</label>
+                        <select name="discount_type"><option value="flat">Fixed Amount</option><option value="percent">%</option></select>
+                    </div>
+                </div>
+                <div class="form-group"><label>Tax Rate (%)</label><input type="number" name="tax_rate" step="0.01" min="0" /></div>
+                <div class="form-group"><label>Notes</label><textarea name="notes" rows="3"></textarea></div>
+            </div>
+
+            <div class="card">
+                <h3>Template</h3>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <label><input type="radio" name="template" value="classic" checked /> Classic</label>
+                    <label><input type="radio" name="template" value="modern" /> Modern</label>
+                    <label><input type="radio" name="template" value="minimal" /> Minimal</label>
+                    <label><input type="radio" name="template" value="bold" /> Bold</label>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:16px;margin-top:20px;">
+                <button type="submit" class="btn-primary">Save Invoice</button>
+                <a href="/dashboard" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p class="disclaimer"><strong>Disclaimer:</strong> This tool generates invoice templates for informational purposes only. Not legal or tax advice. Please consult a qualified professional. We are not responsible for any errors or financial losses. By using this tool, you agree you are solely responsible for your invoices.</p>
+            <p class="copyright">&copy; 2026 InvoiceTool</p>
+        </div>
+    </footer>
+
+    <script>
+        let itemIndex = 1;
+        function addItem() {
+            const container = document.getElementById('items-container');
+            const div = document.createElement('div');
+            div.className = 'form-row item-row';
+            div.innerHTML = `
+                <div class="form-group"><label>Description</label><input type="text" name="items[${itemIndex}][description]" /></div>
+                <div class="form-group"><label>Qty</label><input type="number" name="items[${itemIndex}][qty]" step="1" min="0" /></div>
+                <div class="form-group"><label>Rate</label><input type="number" name="items[${itemIndex}][rate]" step="0.01" min="0" /></div>
+            `;
+            container.appendChild(div);
+            itemIndex++;
+        }
+    </script>
+</body>
+</html>
