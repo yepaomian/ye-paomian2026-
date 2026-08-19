@@ -70,8 +70,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: false,   // ← 已改成 false，HTTP 和 HTTPS 都能用
+      sameSite: 'none',   // ← 已改成 none，允许跨站请求
+      secure: true,       // ← 已改成 true，必须 HTTPS
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   })
