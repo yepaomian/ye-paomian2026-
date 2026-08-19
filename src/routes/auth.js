@@ -75,13 +75,15 @@ router.post('/login', async (req, res, next) => {
             return res.redirect('/login');
         }
 
+        // 调试日志：看登录返回的数据里到底有什么
+        console.error('🔐 登录返回的数据:', JSON.stringify(data));
+
         req.session.accessToken = data.session.access_token;
         req.session.refreshToken = data.session.refresh_token;
         await getOrCreateProfile(data.user.id, data.user.email);
 
         req.session.flash = { type: 'success', message: 'Logged in.' };
         
-        // 关键修复：先保存 session，再跳转
         req.session.save((err) => {
             if (err) console.error('Session save error:', err);
             return res.redirect('/dashboard');
