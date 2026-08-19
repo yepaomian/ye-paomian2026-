@@ -15,7 +15,6 @@ router.post('/register', async (req, res, next) => {
         const email = String(req.body.email || '').trim();
         const password = String(req.body.password || '');
 
-        // 验证邮箱和密码
         if (!email || password.length < 6) {
             req.session.flash = {
                 type: 'error',
@@ -24,7 +23,6 @@ router.post('/register', async (req, res, next) => {
             return res.redirect('/register');
         }
 
-        // 调用 Supabase 注册
         const { data, error } = await supabase.auth.signUp({ email, password });
 
         if (error) {
@@ -40,7 +38,11 @@ router.post('/register', async (req, res, next) => {
             req.session.accessToken = data.session.access_token;
             req.session.refreshToken = data.session.refresh_token;
             req.session.flash = { type: 'success', message: 'Welcome! Your account is ready.' };
-            return res.redirect('/dashboard');
+            req.session.save((err) => {
+                if (err) console.error('Session save error:', err);
+                return res.redirect('/dashboard');
+            });
+            return;
         }
 
         req.session.flash = {
@@ -78,7 +80,12 @@ router.post('/login', async (req, res, next) => {
         await getOrCreateProfile(data.user.id, data.user.email);
 
         req.session.flash = { type: 'success', message: 'Logged in.' };
-        return res.redirect('/dashboard');
+        
+        // 关键修复：先保存 session，再跳转
+        req.session.save((err) => {
+            if (err) console.error('Session save error:', err);
+            return res.redirect('/dashboard');
+        });
 
     } catch (e) {
         next(e);
