@@ -3,14 +3,24 @@ const { getOrCreateProfile, getProfile } = require('../services/profile');
 
 async function hydrateSession(req, res, next) {
   const s = req.session;
-  if (!s || !s.accessToken) return res.redirect('/login');
+  
+  // === 调试日志 ===
+  console.log('🔍 Session exists?', s ? 'Yes' : 'No');
+  console.log('🔍 accessToken exists?', s?.accessToken ? 'Yes' : 'No');
+  
+  if (!s || !s.accessToken) {
+    console.log('❌ No session or accessToken, redirecting to /login');
+    return res.redirect('/login');
+  }
 
   let user = null;
   const { data, error } = await supabase.auth.getUser(s.accessToken);
 
   if (error || !data.user) {
+    console.log('❌ getUser failed:', error?.message || 'no user');
     // Access token expired — try to refresh.
     if (s.refreshToken) {
+      console.log('🔄 Trying to refresh token...');
       const refreshed = await supabase.auth.refreshSession({
         refresh_token: s.refreshToken,
       });
@@ -18,14 +28,17 @@ async function hydrateSession(req, res, next) {
         s.accessToken = refreshed.data.session.access_token;
         s.refreshToken = refreshed.data.session.refresh_token;
         user = refreshed.data.user;
+        console.log('✅ Token refreshed successfully');
       }
     }
     if (!user) {
+      console.log('❌ No user after refresh, redirecting to /login');
       s.destroy(() => {});
       return res.redirect('/login');
     }
   } else {
     user = data.user;
+    console.log('✅ User found:', user.email);
   }
 
   req.user = user;
