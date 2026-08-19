@@ -56,7 +56,7 @@ app.post(
 
 app.use(express.json());
 
-// ============ Session 配置（存到 Supabase 数据库） ============
+// ============ 数据库连接（直接写死，不用环境变量） ============
 const DATABASE_URL = 'postgresql://postgres.jmtqepzzaadzdqhkuvea:linaizhang198751@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres';
 
 app.use(
