@@ -57,8 +57,7 @@ app.post(
 app.use(express.json());
 
 // ============ Session 配置（存到 Supabase 数据库） ============
-// 如果你的 Supabase 密码不是 jmtqepzzaadzdqhkuvea，把下面这行里的密码改成你的真实密码
-const DATABASE_URL = 'postgresql://postgres.jmtqepzzaadzdqhkuvea:jmtqepzzaadzdqhkuvea@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres';
+const DATABASE_URL = 'postgresql://postgres.jmtqepzzaadzdqhkuvea:linaizhang198751@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres';
 
 app.use(
   session({
