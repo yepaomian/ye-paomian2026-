@@ -1,13 +1,74 @@
-<div class="auth-card">
-  <h1>Log in</h1>
-  <form method="post" action="/login" class="auth-form">
-    <label>Email
-      <input type="email" name="email" value="<%= values.email || '' %>" required autofocus />
-    </label>
-    <label>Password
-      <input type="password" name="password" required />
-    </label>
-    <button type="submit" class="btn btn-primary btn-block">Log in</button>
-  </form>
-  <p class="auth-alt">No account? <a href="/register">Sign up free</a></p>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log in — InvoiceTool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:#0b0d15; color:#e8edf5; min-height:100vh; display:flex; align-items:center; justify-content:center; }
+        .auth-card { background:#141824; padding:40px; border-radius:20px; border:1px solid rgba(255,255,255,0.06); width:100%; max-width:420px; }
+        .auth-card h1 { font-size:28px; margin-bottom:8px; }
+        .auth-card .muted { color:#8892a8; font-size:14px; margin-bottom:24px; }
+        .auth-form label { display:block; margin-bottom:16px; color:#b0b8c8; font-size:14px; font-weight:500; }
+        .auth-form input { width:100%; padding:12px 16px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background:#0b0d15; color:#fff; font-size:15px; outline:none; transition:0.2s; }
+        .auth-form input:focus { border-color:#6c5ce7; }
+        .btn-primary { background:linear-gradient(135deg,#6c5ce7,#a29bfe); color:#fff; border:none; padding:12px; border-radius:40px; font-weight:600; font-size:16px; cursor:pointer; width:100%; transition:0.2s; }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(108,92,231,0.35); }
+        .auth-alt { margin-top:16px; text-align:center; color:#8892a8; font-size:14px; }
+        .auth-alt a { color:#a29bfe; text-decoration:none; }
+        .auth-alt a:hover { text-decoration:underline; }
+        .error-msg { background:#2a1418; color:#f87171; padding:10px 16px; border-radius:10px; margin-bottom:16px; font-size:14px; display:none; }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+        <h1>Log in</h1>
+        <p class="muted">Enter your credentials to continue</p>
+        <div id="errorMsg" class="error-msg"></div>
+        <form id="loginForm" class="auth-form">
+            <label>Email
+                <input type="email" id="email" value="test@invoice.com" required autofocus />
+            </label>
+            <label>Password
+                <input type="password" id="password" value="Test123456" required />
+            </label>
+            <button type="submit" class="btn-primary">Log in</button>
+        </form>
+        <p class="auth-alt">No account? <a href="/register">Sign up free</a></p>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.style.display = 'none';
+
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('refreshToken', data.refreshToken);
+                    localStorage.setItem('userEmail', data.user.email);
+                    window.location.href = '/dashboard';
+                } else {
+                    errorMsg.textContent = data.error || 'Login failed. Please try again.';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Network error. Please try again.';
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

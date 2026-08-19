@@ -9,25 +9,23 @@ router.get('/register', optionalAuth, (req, res) => {
     res.render('register', { title: 'Sign up', values: {} });
 });
 
-// ========== 注册提交 ==========
+// ========== 注册提交（返回JSON） ==========
 router.post('/register', async (req, res, next) => {
     try {
         const email = String(req.body.email || '').trim();
         const password = String(req.body.password || '');
 
         if (!email || password.length < 6) {
-            req.session.flash = {
-                type: 'error',
-                message: 'Please provide a valid email and a password of at least 6 characters.'
-            };
-            return res.redirect('/register');
+            return res.status(400).json({
+                success: false,
+                error: 'Email and password of at least 6 characters required.'
+            });
         }
 
         const { data, error } = await supabase.auth.signUp({ email, password });
 
         if (error) {
-            req.session.flash = { type: 'error', message: error.message };
-            return res.redirect('/register');
+            return res.status(400).json({ success: false, error: error.message });
         }
 
         if (data.user) {
@@ -35,21 +33,18 @@ router.post('/register', async (req, res, next) => {
         }
 
         if (data.session) {
-            req.session.accessToken = data.session.access_token;
-            req.session.refreshToken = data.session.refresh_token;
-            req.session.flash = { type: 'success', message: 'Welcome! Your account is ready.' };
-            req.session.save((err) => {
-                if (err) console.error('Session save error:', err);
-                return res.redirect('/dashboard');
+            return res.json({
+                success: true,
+                accessToken: data.session.access_token,
+                refreshToken: data.session.refresh_token,
+                user: { id: data.user.id, email: data.user.email }
             });
-            return;
         }
 
-        req.session.flash = {
-            type: 'info',
-            message: 'Check your email to confirm your account, then log in.'
-        };
-        return res.redirect('/login');
+        return res.json({
+            success: true,
+            message: 'Please check your email to confirm your account.'
+        });
 
     } catch (e) {
         next(e);
@@ -62,7 +57,7 @@ router.get('/login', optionalAuth, (req, res) => {
     res.render('login', { title: 'Log in', values: {} });
 });
 
-// ========== 登录提交 ==========
+// ========== 登录提交（返回JSON + token） ==========
 router.post('/login', async (req, res, next) => {
     try {
         const email = String(req.body.email || '').trim();
@@ -71,36 +66,32 @@ router.post('/login', async (req, res, next) => {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
         if (error) {
-            req.session.flash = { type: 'error', message: 'Invalid email or password.' };
-            return res.redirect('/login');
+            return res.status(400).json({
+                success: false,
+                error: error.message
+            });
         }
-
-        // 完整日志：看 Supabase 到底返回了什么
-        console.error('🔐 完整返回数据:', JSON.stringify(data, null, 2));
 
         if (!data.session) {
-            req.session.flash = { type: 'error', message: 'No session returned from Supabase.' };
-            return res.redirect('/login');
+            return res.status(400).json({
+                success: false,
+                error: 'No session returned. Please check your email confirmation.'
+            });
         }
 
-        req.session.accessToken = data.session.access_token;
-        req.session.refreshToken = data.session.refresh_token;
         await getOrCreateProfile(data.user.id, data.user.email);
 
-        req.session.flash = { type: 'success', message: 'Logged in.' };
-        
-        req.session.save((err) => {
-            if (err) {
-                console.error('❌ Session save error:', err);
-                req.session.flash = { type: 'error', message: 'Session save failed.' };
-                return res.redirect('/login');
+        return res.json({
+            success: true,
+            accessToken: data.session.access_token,
+            refreshToken: data.session.refresh_token,
+            user: {
+                id: data.user.id,
+                email: data.user.email
             }
-            console.error('✅ Session saved, redirecting to /dashboard');
-            return res.redirect('/dashboard');
         });
 
     } catch (e) {
-        console.error('❌ Login error:', e);
         next(e);
     }
 });

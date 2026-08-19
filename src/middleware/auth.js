@@ -1,73 +1,59 @@
 const { supabase } = require('../db');
 const { getOrCreateProfile, getProfile } = require('../services/profile');
 
-async function hydrateSession(req, res, next) {
-  const s = req.session;
-  
-  // === 调试日志（用 error 级别确保显示） ===
-  console.error('🔴 Session exists?', s ? 'Yes' : 'No');
-  console.error('🔴 accessToken exists?', s?.accessToken ? 'Yes' : 'No');
-  console.error('🔴 Session full:', JSON.stringify(s));
-  
-  if (!s || !s.accessToken) {
-    console.error('❌ No session or accessToken, redirecting to /login');
-    return res.redirect('/login');
-  }
-
-  let user = null;
-  const { data, error } = await supabase.auth.getUser(s.accessToken);
-
-  if (error || !data.user) {
-    console.error('❌ getUser failed:', error?.message || 'no user');
-    // Access token expired — try to refresh.
-    if (s.refreshToken) {
-      console.error('🔄 Trying to refresh token...');
-      const refreshed = await supabase.auth.refreshSession({
-        refresh_token: s.refreshToken,
-      });
-      if (refreshed.data && refreshed.data.session) {
-        s.accessToken = refreshed.data.session.access_token;
-        s.refreshToken = refreshed.data.session.refresh_token;
-        user = refreshed.data.user;
-        console.error('✅ Token refreshed successfully');
-      }
+// 需要登录的页面 - 从请求头读取 token
+async function requireAuth(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.redirect('/login');
     }
-    if (!user) {
-      console.error('❌ No user after refresh, redirecting to /login');
-      s.destroy(() => {});
-      return res.redirect('/login');
+
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+        return res.redirect('/login');
     }
-  } else {
-    user = data.user;
-    console.error('✅ User found:', user.email);
-  }
 
-  req.user = user;
-  const profile = await getOrCreateProfile(user.id, user.email);
-  req.profile = profile;
-  res.locals.user = { email: user.email, plan: profile.plan };
-  next();
-}
-
-// For pages that should behave differently when logged in, without redirecting.
-async function optionalAuth(req, res, next) {
-  if (req.session && req.session.accessToken) {
     try {
-      const { data } = await supabase.auth.getUser(req.session.accessToken);
-      if (data && data.user) {
+        const { data, error } = await supabase.auth.getUser(token);
+        if (error || !data.user) {
+            return res.redirect('/login');
+        }
+
         req.user = data.user;
-        const profile = await getProfile(data.user.id);
-        res.locals.user = {
-          email: data.user.email,
-          plan: profile ? profile.plan : 'free',
-        };
-        if (profile) req.profile = profile;
-      }
+        const profile = await getOrCreateProfile(data.user.id, data.user.email);
+        req.profile = profile;
+        res.locals.user = { email: data.user.email, plan: profile.plan };
+        res.locals.accessToken = token;
+
+        next();
     } catch (e) {
-      /* ignore — treat as anonymous */
+        console.error('Auth error:', e);
+        return res.redirect('/login');
     }
-  }
-  next();
 }
 
-module.exports = { requireAuth: hydrateSession, optionalAuth };
+// 可选登录（登录了就有 user，没登录也继续）
+async function optionalAuth(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        try {
+            const { data } = await supabase.auth.getUser(token);
+            if (data && data.user) {
+                req.user = data.user;
+                const profile = await getProfile(data.user.id);
+                res.locals.user = {
+                    email: data.user.email,
+                    plan: profile ? profile.plan : 'free',
+                };
+                if (profile) req.profile = profile;
+                res.locals.accessToken = token;
+            }
+        } catch (e) {
+            /* ignore */
+        }
+    }
+    next();
+}
+
+module.exports = { requireAuth, optionalAuth };

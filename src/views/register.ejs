@@ -20,32 +20,59 @@
         .auth-alt { margin-top:16px; text-align:center; color:#8892a8; font-size:14px; }
         .auth-alt a { color:#a29bfe; text-decoration:none; }
         .auth-alt a:hover { text-decoration:underline; }
-        .flash { background:#1a2a1a; color:#4ade80; padding:10px 16px; border-radius:10px; margin-bottom:16px; font-size:14px; }
-        .flash-error { background:#2a1418; color:#f87171; }
+        .error-msg { background:#2a1418; color:#f87171; padding:10px 16px; border-radius:10px; margin-bottom:16px; font-size:14px; display:none; }
     </style>
 </head>
 <body>
     <div class="auth-card">
         <h1>Create your account</h1>
         <p class="muted">Free plan includes 1 invoice per month. Upgrade anytime.</p>
-
-        <% if (flash) { %>
-            <div class="flash <%= flash.type === 'error' ? 'flash-error' : '' %>">
-                <%= flash.message %>
-            </div>
-        <% } %>
-
-        <form method="post" action="/register" class="auth-form">
+        <div id="errorMsg" class="error-msg"></div>
+        <form id="registerForm" class="auth-form">
             <label>Email
-                <input type="email" name="email" required autofocus />
+                <input type="email" id="email" required autofocus />
             </label>
             <label>Password
-                <input type="password" name="password" minlength="6" required />
+                <input type="password" id="password" minlength="6" required />
                 <small>At least 6 characters.</small>
             </label>
             <button type="submit" class="btn-primary">Sign up</button>
         </form>
         <p class="auth-alt">Already have an account? <a href="/login">Log in</a></p>
     </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.style.display = 'none';
+
+            try {
+                const res = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (data.success && data.accessToken) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('refreshToken', data.refreshToken);
+                    localStorage.setItem('userEmail', data.user.email);
+                    window.location.href = '/dashboard';
+                } else if (data.success) {
+                    window.location.href = '/login';
+                } else {
+                    errorMsg.textContent = data.error || 'Registration failed. Please try again.';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Network error. Please try again.';
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html>
