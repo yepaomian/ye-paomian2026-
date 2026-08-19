@@ -56,7 +56,7 @@ app.post(
 
 app.use(express.json());
 
-// ============ 数据库连接 ============
+// ============ Session 配置 ============
 const DATABASE_URL = 'postgresql://postgres.jmtqepzzaadzdqhkuvea:linaizhang198751@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres';
 
 app.use(
@@ -70,8 +70,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: 'none',   // ← 已改成 none，允许跨站请求
-      secure: true,       // ← 已改成 true，必须 HTTPS
+      sameSite: 'lax',
+      secure: false,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   })
