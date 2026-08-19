@@ -75,8 +75,13 @@ router.post('/login', async (req, res, next) => {
             return res.redirect('/login');
         }
 
-        // 调试日志：看登录返回的数据里到底有什么
-        console.error('🔐 登录返回的数据:', JSON.stringify(data));
+        // 完整日志：看 Supabase 到底返回了什么
+        console.error('🔐 完整返回数据:', JSON.stringify(data, null, 2));
+
+        if (!data.session) {
+            req.session.flash = { type: 'error', message: 'No session returned from Supabase.' };
+            return res.redirect('/login');
+        }
 
         req.session.accessToken = data.session.access_token;
         req.session.refreshToken = data.session.refresh_token;
@@ -85,11 +90,17 @@ router.post('/login', async (req, res, next) => {
         req.session.flash = { type: 'success', message: 'Logged in.' };
         
         req.session.save((err) => {
-            if (err) console.error('Session save error:', err);
+            if (err) {
+                console.error('❌ Session save error:', err);
+                req.session.flash = { type: 'error', message: 'Session save failed.' };
+                return res.redirect('/login');
+            }
+            console.error('✅ Session saved, redirecting to /dashboard');
             return res.redirect('/dashboard');
         });
 
     } catch (e) {
+        console.error('❌ Login error:', e);
         next(e);
     }
 });
