@@ -56,7 +56,7 @@ app.post(
 
 app.use(express.json());
 
-// ============ 数据库连接（直接写死，不用环境变量） ============
+// ============ 数据库连接 ============
 const DATABASE_URL = 'postgresql://postgres.jmtqepzzaadzdqhkuvea:linaizhang198751@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres';
 
 app.use(
@@ -71,7 +71,7 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
-      secure: config.isProduction || false,
+      secure: false,   // ← 已改成 false，HTTP 和 HTTPS 都能用
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   })
