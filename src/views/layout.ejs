@@ -37,9 +37,8 @@
     <header class="site-header">
         <div class="container nav">
             <div class="nav-left">
-                <% if (user) { %>
-                    <a href="/dashboard" class="back-btn" title="Back to Dashboard">←</a>
-                <% } %>
+                <!-- 返回按钮：不管是否登录都显示，点击跳转仪表板 -->
+                <a href="/dashboard" class="back-btn" title="Back to Dashboard">←</a>
                 <a class="brand" href="/dashboard">Invoice<span>Tool</span></a>
             </div>
             <nav class="nav-links">
