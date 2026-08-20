@@ -17,7 +17,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(express.urlencoded({ extended: true }));
 
-// Stripe webhook
 app.post(
   '/billing/webhook',
   express.raw({ type: 'application/json' }),
@@ -56,7 +55,6 @@ app.post(
 
 app.use(express.json());
 
-// ============ 数据库连接 ============
 const DATABASE_URL = 'postgresql://postgres.jmtqepzzaadzdqhkuvea:linaizhang198751@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres';
 
 app.use(
@@ -77,7 +75,6 @@ app.use(
   })
 );
 
-// Local template helpers
 app.use((req, res, next) => {
   res.locals.flash = req.session.flash || null;
   delete req.session.flash;
@@ -85,7 +82,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// ============ Routes ============
 app.use('/', require('./routes/pages'));
 app.use('/', require('./routes/auth'));
 app.use('/reset', require('./routes/reset'));
@@ -94,7 +90,6 @@ app.use('/invoices', require('./routes/invoices'));
 app.use('/dashboard', require('./routes/dashboard'));
 app.use('/billing', require('./routes/billing'));
 
-// 404
 app.use((req, res) => {
   res.status(404).render('error', {
     title: 'Not found',
@@ -104,7 +99,6 @@ app.use((req, res) => {
   });
 });
 
-// Error handler
 app.use((err, req, res, next) => {
   console.error(err);
   const status = err.status || 500;
