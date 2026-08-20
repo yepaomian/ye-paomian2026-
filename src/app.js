@@ -56,7 +56,7 @@ app.post(
 
 app.use(express.json());
 
-// ============ Session 配置 ============
+// ============ 数据库连接 ============
 const DATABASE_URL = 'postgresql://postgres.jmtqepzzaadzdqhkuvea:linaizhang198751@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres';
 
 app.use(
@@ -85,9 +85,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
+// ============ Routes ============
 app.use('/', require('./routes/pages'));
 app.use('/', require('./routes/auth'));
+app.use('/reset', require('./routes/reset'));   // 忘记密码
 app.use('/invoices', require('./routes/invoices'));
 app.use('/dashboard', require('./routes/dashboard'));
 app.use('/billing', require('./routes/billing'));

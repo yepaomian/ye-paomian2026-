@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password — InvoiceTool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:#0b0d15; color:#e8edf5; min-height:100vh; display:flex; align-items:center; justify-content:center; }
+        .auth-card { background:#141824; padding:40px; border-radius:20px; border:1px solid rgba(255,255,255,0.06); width:100%; max-width:420px; }
+        .auth-card h1 { font-size:28px; margin-bottom:8px; }
+        .auth-card .muted { color:#8892a8; font-size:14px; margin-bottom:24px; }
+        .auth-form label { display:block; margin-bottom:16px; color:#b0b8c8; font-size:14px; font-weight:500; }
+        .auth-form input { width:100%; padding:12px 16px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background:#0b0d15; color:#fff; font-size:15px; outline:none; transition:0.2s; }
+        .auth-form input:focus { border-color:#6c5ce7; }
+        .btn-primary { background:linear-gradient(135deg,#6c5ce7,#a29bfe); color:#fff; border:none; padding:12px; border-radius:40px; font-weight:600; font-size:16px; cursor:pointer; width:100%; transition:0.2s; }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(108,92,231,0.35); }
+        .auth-alt { margin-top:16px; text-align:center; color:#8892a8; font-size:14px; }
+        .auth-alt a { color:#a29bfe; text-decoration:none; }
+        .auth-alt a:hover { text-decoration:underline; }
+        .flash { padding:12px 16px; border-radius:10px; margin-bottom:16px; font-size:14px; }
+        .flash-success { background:#1a2a1a; color:#4ade80; }
+        .flash-error { background:#2a1418; color:#f87171; }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+        <h1>Reset Password</h1>
+        <p class="muted">Enter your email to receive a password reset link.</p>
+
+        <% if (message) { %>
+            <div class="flash flash-success"><%= message %></div>
+        <% } %>
+
+        <% if (error) { %>
+            <div class="flash flash-error"><%= error %></div>
+        <% } %>
+
+        <form method="post" action="/reset" class="auth-form">
+            <label>Email
+                <input type="email" name="email" required autofocus />
+            </label>
+            <button type="submit" class="btn-primary">Send Reset Link</button>
+        </form>
+        <p class="auth-alt"><a href="/login">Back to Log in</a></p>
+    </div>
+</body>
+</html>
