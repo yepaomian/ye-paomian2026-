@@ -52,7 +52,6 @@
     </div>
 
     <script>
-        // 小眼睛切换密码显示
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             if (passwordInput.type === 'password') {
@@ -64,7 +63,6 @@
             }
         });
 
-        // 登录提交
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('email').value;

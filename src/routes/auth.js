@@ -3,13 +3,11 @@ const { supabase } = require('../db');
 const { getOrCreateProfile } = require('../services/profile');
 const { optionalAuth } = require('../middleware/auth');
 
-// ========== 注册页面 ==========
 router.get('/register', optionalAuth, (req, res) => {
     if (req.user) return res.redirect('/dashboard');
     res.render('register', { title: 'Sign up', values: {} });
 });
 
-// ========== 注册提交 ==========
 router.post('/register', async (req, res, next) => {
     try {
         const email = String(req.body.email || '').trim();
@@ -51,13 +49,11 @@ router.post('/register', async (req, res, next) => {
     }
 });
 
-// ========== 登录页面 ==========
 router.get('/login', optionalAuth, (req, res) => {
     if (req.user) return res.redirect('/dashboard');
     res.render('login', { title: 'Log in', values: {} });
 });
 
-// ========== 登录提交（返回 JSON） ==========
 router.post('/login', async (req, res, next) => {
     try {
         const email = String(req.body.email || '').trim();
@@ -96,7 +92,6 @@ router.post('/login', async (req, res, next) => {
     }
 });
 
-// ========== 登出 ==========
 router.post('/logout', (req, res) => {
     req.session.destroy(() => res.redirect('/'));
 });
