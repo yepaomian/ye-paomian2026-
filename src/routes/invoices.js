@@ -2,192 +2,107 @@ const router = require('express').Router();
 const { admin } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { assertCanCreate } = require('../services/quota');
-const { flatten, normalize, generateInvoiceNumber } = require('../services/invoice');
-const { generatePdf } = require('../services/pdf');
+const { flatten, normalize } = require('../services/invoice');
 
-const TEMPLATES = ['1', '2', '3', '4'];
-const STATUSES = ['draft', 'sent', 'paid'];
-
-function parseInvoice(body) {
-  const rawItems = Array.isArray(body.items) ? body.items : [];
-  const items = rawItems
-    .filter((it) => it && (it.description || it.quantity))
-    .map((it) => ({
-      description: String(it.description || '').trim(),
-      quantity: Number(it.quantity) || 0,
-      rate: Number(it.rate) || 0,
-    }));
-
-  return {
-    invoice_number:
-      String(body.invoice_number || '').trim() || generateInvoiceNumber(),
-    issue_date: body.issue_date || null,
-    due_date: body.due_date || null,
-    currency: String(body.currency || 'USD').toUpperCase(),
-    tax_rate: Number(body.tax_rate) || 0,
-    discount: Number(body.discount) || 0,
-    discount_type: body.discount_type === 'percent' ? 'percent' : 'flat',
-    status: STATUSES.includes(body.status) ? body.status : 'draft',
-    template: TEMPLATES.includes(body.template) ? body.template : '1',
-    from_json: {
-      name: body.from_name,
-      email: body.from_email,
-      phone: body.from_phone,
-      address: body.from_address,
-      city: body.from_city,
-      country: body.from_country,
-      taxId: body.from_tax_id,
-    },
-    to_json: {
-      name: body.to_name,
-      company: body.to_company,
-      email: body.to_email,
-      address: body.to_address,
-      city: body.to_city,
-      country: body.to_country,
-    },
-    items,
-    notes: body.notes || '',
-  };
-}
-
-function emptyInvoice() {
-  return {
-    invoice_number: '',
-    issue_date: new Date().toISOString().slice(0, 10),
-    due_date: '',
-    currency: 'USD',
-    tax_rate: '',
-    discount: '',
-    discount_type: 'flat',
-    status: 'draft',
-    template: '1',
-    from: { name: '', email: '', phone: '', address: '', city: '', country: '', taxId: '' },
-    to: { name: '', company: '', email: '', address: '', city: '', country: '' },
-    items: [{ description: '', quantity: 1, rate: '' }],
-    notes: '',
-  };
-}
-
-async function getOwnedInvoice(req, res) {
-  const { data, error } = await admin
-    .from('invoices')
-    .select('*')
-    .eq('id', req.params.id)
-    .eq('user_id', req.user.id)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) {
-    const err = new Error('Invoice not found.');
-    err.status = 404;
-    throw err;
-  }
-  return data;
-}
-
-router.get('/new', requireAuth, (req, res) => {
-  res.render('invoice-form', {
-    title: 'New invoice',
-    invoice: emptyInvoice(),
-    mode: 'create',
-  });
-});
-
-router.post('/', requireAuth, async (req, res, next) => {
-  try {
-    await assertCanCreate(req.user.id, req.profile.plan);
-    const invoice = parseInvoice(req.body);
-    const { data, error } = await admin
-      .from('invoices')
-      .insert({ ...invoice, user_id: req.user.id })
-      .select()
-      .single();
-    if (error) throw error;
-    req.session.flash = { type: 'success', message: 'Invoice created.' };
-    return res.redirect(`/invoices/${data.id}`);
-  } catch (e) {
-    if (e.status === 402) {
-      req.session.flash = { type: 'error', message: e.message };
-      return res.redirect('/billing');
-    }
-    next(e);
-  }
-});
-
-router.get('/:id', requireAuth, async (req, res, next) => {
-  try {
-    const row = await getOwnedInvoice(req, res);
-    const invoice = normalize(flatten(row));
-    res.render('invoice-view', {
-      title: `Invoice ${row.invoice_number}`,
-      invoice,
-    });
-  } catch (e) {
-    next(e);
-  }
-});
-
-router.get('/:id/edit', requireAuth, async (req, res, next) => {
-  try {
-    const row = await getOwnedInvoice(req, res);
+// 新建发票页面（前端渲染，不需要验证）
+router.get('/new', async (req, res, next) => {
     res.render('invoice-form', {
-      title: `Edit ${row.invoice_number}`,
-      invoice: flatten(row),
-      mode: 'edit',
+        title: 'New Invoice',
+        user: null,
+        invoice: null
     });
-  } catch (e) {
-    next(e);
-  }
 });
 
-router.post('/:id/update', requireAuth, async (req, res, next) => {
-  try {
-    await getOwnedInvoice(req, res);
-    const invoice = parseInvoice(req.body);
-    const { data, error } = await admin
-      .from('invoices')
-      .update({ ...invoice, updated_at: new Date().toISOString() })
-      .eq('id', req.params.id)
-      .eq('user_id', req.user.id)
-      .select()
-      .single();
-    if (error) throw error;
-    req.session.flash = { type: 'success', message: 'Invoice updated.' };
-    return res.redirect(`/invoices/${data.id}`);
-  } catch (e) {
-    next(e);
-  }
+// 保存发票（需要 token 验证）
+router.post('/', requireAuth, async (req, res, next) => {
+    try {
+        await assertCanCreate(req.user.id, req.profile.plan);
+        const data = req.body;
+        const { error } = await admin.from('invoices').insert({
+            user_id: req.user.id,
+            invoice_number: data.invoice_number || `INV-${Date.now()}`,
+            issue_date: data.issue_date || new Date().toISOString().split('T')[0],
+            due_date: data.due_date,
+            currency: data.currency || 'USD',
+            tax_rate: parseFloat(data.tax_rate) || 0,
+            discount: parseFloat(data.discount) || 0,
+            discount_type: data.discount_type || 'flat',
+            status: data.status || 'draft',
+            template: data.template || 'classic',
+            from_json: {
+                name: data.from_name,
+                email: data.from_email,
+                phone: data.from_phone,
+                tax_id: data.from_tax_id,
+                address: data.from_address,
+                city: data.from_city,
+                country: data.from_country
+            },
+            to_json: {
+                name: data.to_name,
+                company: data.to_company,
+                email: data.to_email,
+                city: data.to_city,
+                country: data.to_country
+            },
+            items: data.items || [],
+            notes: data.notes
+        });
+        if (error) throw error;
+        res.json({ success: true, message: 'Invoice created' });
+    } catch (e) {
+        if (e.message && e.message.includes('limit')) {
+            return res.status(402).json({ success: false, error: e.message });
+        }
+        next(e);
+    }
 });
 
-router.post('/:id/delete', requireAuth, async (req, res, next) => {
-  try {
-    await getOwnedInvoice(req, res);
-    const { error } = await admin
-      .from('invoices')
-      .delete()
-      .eq('id', req.params.id)
-      .eq('user_id', req.user.id);
-    if (error) throw error;
-    req.session.flash = { type: 'success', message: 'Invoice deleted.' };
-    return res.redirect('/dashboard');
-  } catch (e) {
-    next(e);
-  }
+// 发票列表数据
+router.get('/list', requireAuth, async (req, res, next) => {
+    try {
+        const { data: invoices, error } = await admin
+            .from('invoices')
+            .select('*')
+            .eq('user_id', req.user.id)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        const list = (invoices || []).map((row) => {
+            const n = normalize(flatten(row));
+            return { ...row, ...n };
+        });
+        res.json({ invoices: list });
+    } catch (e) {
+        next(e);
+    }
 });
 
-router.get('/:id/pdf', requireAuth, async (req, res, next) => {
-  try {
-    const row = await getOwnedInvoice(req, res);
-    const pdf = await generatePdf(flatten(row));
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `inline; filename="${row.invoice_number}.pdf"`
-    );
-    return res.send(Buffer.from(pdf));
-  } catch (e) {
-    next(e);
-  }
+// 发票详情数据
+router.get('/data/:id', requireAuth, async (req, res, next) => {
+    try {
+        const { data, error } = await admin
+            .from('invoices')
+            .select('*')
+            .eq('id', req.params.id)
+            .eq('user_id', req.user.id)
+            .single();
+        if (error || !data) {
+            return res.status(404).json({ success: false, error: 'Invoice not found' });
+        }
+        const invoice = normalize(flatten(data));
+        res.json({ invoice });
+    } catch (e) {
+        next(e);
+    }
+});
+
+// 发票详情页面（前端渲染）
+router.get('/:id', async (req, res, next) => {
+    res.render('invoice-view', {
+        title: 'Invoice',
+        user: null,
+        invoice: null
+    });
 });
 
 module.exports = router;

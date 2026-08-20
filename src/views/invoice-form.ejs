@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Invoice — InvoiceTool</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Inter',sans-serif; background:#0b0d15; color:#e8edf5; min-height:100vh; }
@@ -29,10 +29,11 @@
         .card h3 { color:#fff; font-size:18px; margin-bottom:16px; }
         .inline-group { display:flex; gap:20px; flex-wrap:wrap; }
         .inline-group .form-group { flex:1; min-width:150px; }
+        .flash { padding:12px 20px; border-radius:12px; margin:16px 0; background:#1a1a2e; border:1px solid rgba(255,255,255,0.06); color:#b0b8c8; }
+        .flash-error { background:#2a1418; color:#f87171; }
         .site-footer { margin-top:60px; padding:30px 0; border-top:1px solid rgba(255,255,255,0.06); text-align:center; }
         .disclaimer { font-size:13px; color:#6b7488; max-width:700px; margin:0 auto 12px; line-height:1.7; }
         .copyright { font-size:13px; color:#4a5266; }
-        .flash { padding:12px 20px; border-radius:12px; margin:16px 0; background:#1a1a2e; border:1px solid rgba(255,255,255,0.06); color:#b0b8c8; }
         @media (max-width:768px) { .nav-links { gap:12px; } .form-row { grid-template-columns:1fr; } .inline-group { flex-direction:column; } }
     </style>
 </head>
@@ -44,17 +45,16 @@
                 <a href="/dashboard">Dashboard</a>
                 <a href="/invoices/new">New Invoice</a>
                 <a href="/billing">Billing</a>
-                <form method="post" action="/logout" style="display:inline;">
-                    <button type="submit" style="background:none;border:none;color:#b0b8c8;cursor:pointer;font-size:15px;font-weight:500;">Log out</button>
-                </form>
+                <button id="logoutBtn" style="background:none;border:none;color:#b0b8c8;cursor:pointer;font-size:15px;font-weight:500;">Log out</button>
             </nav>
         </div>
     </header>
 
     <main class="container">
+        <div id="errorMsg" class="flash flash-error" style="display:none;"></div>
         <h1 style="font-size:32px;font-weight:800;margin:24px 0 8px;">New Invoice</h1>
 
-        <form method="post" action="/invoices">
+        <form id="invoiceForm">
             <div class="card">
                 <h3>Details</h3>
                 <div class="form-row">
@@ -64,7 +64,7 @@
                     </div>
                     <div class="form-group">
                         <label>Issue Date</label>
-                        <input type="date" name="issue_date" value="<%= new Date().toISOString().split('T')[0] %>" />
+                        <input type="date" name="issue_date" />
                     </div>
                 </div>
                 <div class="form-row">
@@ -163,6 +163,21 @@
     </footer>
 
     <script>
+        // ===== 检查 token（关键！） =====
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // 登出
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('userEmail');
+            window.location.href = '/login';
+        });
+
+        // 添加行项目
         let itemIndex = 1;
         function addItem() {
             const container = document.getElementById('items-container');
@@ -176,6 +191,55 @@
             container.appendChild(div);
             itemIndex++;
         }
+
+        // 提交表单
+        document.getElementById('invoiceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.style.display = 'none';
+
+            const formData = new FormData(this);
+            const data = {};
+            formData.forEach((value, key) => {
+                if (key.startsWith('items[')) {
+                    const match = key.match(/items\[(\d+)\]\[(\w+)\]/);
+                    if (match) {
+                        const idx = parseInt(match[1]);
+                        const field = match[2];
+                        if (!data.items) data.items = [];
+                        if (!data.items[idx]) data.items[idx] = {};
+                        data.items[idx][field] = value;
+                    }
+                } else {
+                    data[key] = value;
+                }
+            });
+
+            if (data.items) {
+                data.items = data.items.filter(item => item && item.description);
+            }
+
+            try {
+                const res = await fetch('/invoices', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    window.location.href = '/dashboard';
+                } else {
+                    errorMsg.textContent = result.error || 'Failed to save invoice.';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Network error. Please try again.';
+                errorMsg.style.display = 'block';
+            }
+        });
     </script>
 </body>
 </html>
