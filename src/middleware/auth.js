@@ -1,74 +1,69 @@
 const { supabase } = require('../db');
 const { getOrCreateProfile, getProfile } = require('../services/profile');
 
-function isJsonRequest(req) {
-    return req.headers.accept && req.headers.accept.includes('application/json');
+async function hydrateSession(req, res, next) {
+  const s = req.session;
+  
+  // ===== 调试日志 =====
+  console.error('🔴 Session check:', s ? 'exists' : 'null', s?.accessToken ? 'has token' : 'no token');
+  
+  if (!s || !s.accessToken) {
+    console.error('❌ No session or accessToken, redirecting to /login');
+    return res.redirect('/login');
+  }
+
+  let user = null;
+  const { data, error } = await supabase.auth.getUser(s.accessToken);
+
+  if (error || !data.user) {
+    console.error('❌ getUser failed:', error?.message || 'no user');
+    if (s.refreshToken) {
+      console.error('🔄 Trying to refresh token...');
+      const refreshed = await supabase.auth.refreshSession({
+        refresh_token: s.refreshToken,
+      });
+      if (refreshed.data && refreshed.data.session) {
+        s.accessToken = refreshed.data.session.access_token;
+        s.refreshToken = refreshed.data.session.refresh_token;
+        user = refreshed.data.user;
+        console.error('✅ Token refreshed successfully');
+      }
+    }
+    if (!user) {
+      console.error('❌ No user after refresh, redirecting to /login');
+      s.destroy(() => {});
+      return res.redirect('/login');
+    }
+  } else {
+    user = data.user;
+    console.error('✅ User found:', user.email);
+  }
+
+  req.user = user;
+  const profile = await getOrCreateProfile(user.id, user.email);
+  req.profile = profile;
+  res.locals.user = { email: user.email, plan: profile.plan };
+  next();
 }
 
-async function requireAuth(req, res, next) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        if (isJsonRequest(req)) {
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-        return res.redirect('/login');
-    }
-
-    const token = authHeader.split(' ')[1];
-    if (!token) {
-        if (isJsonRequest(req)) {
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-        return res.redirect('/login');
-    }
-
-    try {
-        const { data, error } = await supabase.auth.getUser(token);
-        if (error || !data.user) {
-            if (isJsonRequest(req)) {
-                return res.status(401).json({ error: 'Invalid token' });
-            }
-            return res.redirect('/login');
-        }
-
-        req.user = data.user;
-        const profile = await getOrCreateProfile(data.user.id, data.user.email);
-        req.profile = profile;
-        res.locals.user = { email: data.user.email, plan: profile.plan };
-        res.locals.accessToken = token;
-
-        next();
-    } catch (e) {
-        console.error('Auth error:', e);
-        if (isJsonRequest(req)) {
-            return res.status(401).json({ error: 'Auth error' });
-        }
-        return res.redirect('/login');
-    }
-}
-
-// 可选登录
 async function optionalAuth(req, res, next) {
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.split(' ')[1];
-        try {
-            const { data } = await supabase.auth.getUser(token);
-            if (data && data.user) {
-                req.user = data.user;
-                const profile = await getProfile(data.user.id);
-                res.locals.user = {
-                    email: data.user.email,
-                    plan: profile ? profile.plan : 'free',
-                };
-                if (profile) req.profile = profile;
-                res.locals.accessToken = token;
-            }
-        } catch (e) {
-            /* ignore */
-        }
+  if (req.session && req.session.accessToken) {
+    try {
+      const { data } = await supabase.auth.getUser(req.session.accessToken);
+      if (data && data.user) {
+        req.user = data.user;
+        const profile = await getProfile(data.user.id);
+        res.locals.user = {
+          email: data.user.email,
+          plan: profile ? profile.plan : 'free',
+        };
+        if (profile) req.profile = profile;
+      }
+    } catch (e) {
+      /* ignore */
     }
-    next();
+  }
+  next();
 }
 
-module.exports = { requireAuth, optionalAuth };
+module.exports = { requireAuth: hydrateSession, optionalAuth };
