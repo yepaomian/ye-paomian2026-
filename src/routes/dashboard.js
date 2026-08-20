@@ -4,12 +4,12 @@ const { requireAuth } = require('../middleware/auth');
 const { getQuota } = require('../services/quota');
 const { flatten, normalize } = require('../services/invoice');
 
-// 仪表板数据接口（需要 token 验证）
 router.get('/data', requireAuth, async (req, res, next) => {
     try {
         const { data: invoices, error } = await admin
             .from('invoices')
             .select('*')
+            .is('deleted_at', null)
             .eq('user_id', req.user.id)
             .order('created_at', { ascending: false });
 
@@ -41,12 +41,11 @@ router.get('/data', requireAuth, async (req, res, next) => {
     }
 });
 
-// 仪表板页面入口（不验证 token，前端会自己检查）
-router.get('/', async (req, res, next) => {
+router.get('/', requireAuth, async (req, res, next) => {
     res.render('dashboard', {
         title: 'Dashboard',
-        user: null,
-        profile: null
+        user: req.user,
+        profile: req.profile
     });
 });
 

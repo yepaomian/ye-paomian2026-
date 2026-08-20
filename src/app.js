@@ -88,7 +88,8 @@ app.use((req, res, next) => {
 // ============ Routes ============
 app.use('/', require('./routes/pages'));
 app.use('/', require('./routes/auth'));
-app.use('/reset', require('./routes/reset'));   // 忘记密码
+app.use('/reset', require('./routes/reset'));
+app.use('/trash', require('./routes/trash'));
 app.use('/invoices', require('./routes/invoices'));
 app.use('/dashboard', require('./routes/dashboard'));
 app.use('/billing', require('./routes/billing'));
