@@ -57,6 +57,7 @@
                 <a href="/dashboard">Dashboard</a>
                 <a href="/invoices/new">New Invoice</a>
                 <a href="/billing">Billing</a>
+                <a href="/trash">Recycle Bin</a>
                 <button id="logoutBtn" style="background:none;border:none;color:#b0b8c8;cursor:pointer;font-size:15px;font-weight:500;">Log out</button>
             </nav>
         </div>
@@ -103,7 +104,8 @@
                 const data = await res.json();
                 renderDashboard(data);
             } catch (e) {
-                document.getElementById('app').innerHTML = '<div class="loading">Error loading dashboard. Please refresh.</div>';
+                console.error('加载仪表板失败:', e);
+                document.getElementById('app').innerHTML = '<div class="loading">Error loading dashboard. Please refresh the page.</div>';
             }
         }
 
